@@ -16,6 +16,11 @@ class NewVisitorTest(StaticLiveServerTestCase):
         super().setUpClass()
         cls.server_url = cls.live_server_url
 
+    @classmethod
+    def tearDownClass(cls):
+        if cls.server_url == cls.live_server_url:
+            super().tearDownClass()
+
     def setUp(self):
         self.browser = webdriver.Chrome('/Users/judelee/Downloads/chromedriver')
         self.browser.implicitly_wait(3)
