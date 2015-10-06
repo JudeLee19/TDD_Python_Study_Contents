@@ -5,6 +5,9 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from unittest import skip
 import time
 import sys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 
 class ItemValidationTest(FunctionalTest):
@@ -25,15 +28,20 @@ class ItemValidationTest(FunctionalTest):
         self.check_for_row_in_list_table('1: Buy milk')
 
         # Perversely, she now decides to submit a second blank list item
-        self.browser.find_element_by_id('id_text').send_keys('\n')
+        self.get_item_input_box().send_keys('\n')
 
         # She receives a similar warning on the list page
-        self.check_for_row_in_list_table('1: Buy milk')
         error = self.browser.find_element_by_css_selector('.has-error')
         self.assertEqual(error.text, "You can't have an empty list item")
 
         # And she can correct it by filling some text in
         self.get_item_input_box().send_keys('Make tea\n')
+
+        # Wait until id_list_table is located.
+        WebDriverWait(self.browser, 10).until(
+            EC.presence_of_element_located((By.ID, "id_list_table"))
+        )
+
         self.check_for_row_in_list_table('1: Buy milk')
         self.check_for_row_in_list_table('2: Make tea')
 
@@ -43,10 +51,11 @@ class ItemValidationTest(FunctionalTest):
         self.get_item_input_box().send_keys('Buy wellies\n')
         self.check_for_row_in_list_table('1: Buy wellies')
 
-         # She accidentally tries to enter a duplicate item
+        # She accidentally tries to enter a duplicate item
         self.get_item_input_box().send_keys('Buy wellies\n')
 
-        # She sees a helpful error message
-        self.check_for_row_in_list_table('1: Buy wellies')
+        # She sees a helpful error message: Buy welli
+
         error = self.browser.find_element_by_css_selector('.has-error')
         self.assertEqual(error.text, "You've already got this in your list")
+        self.check_for_row_in_list_table('1: Buy wellies')
